@@ -76,7 +76,7 @@ class DialogueStateTracker(object):
         return tracker
 
     def __init__(self, sender_id, slots,
-                 max_event_history=None):
+                 max_event_history=None, page_id=None):
         """Initialize the tracker.
 
         A set of events can be stored externally, and we will run through all
@@ -89,6 +89,8 @@ class DialogueStateTracker(object):
         self.events = self._create_events([])
         # id of the source of the messages
         self.sender_id = sender_id
+        # id of the page
+        self.page_id = page_id
         # slots that can be filled in this domain
         self.slots = {slot.name: copy.deepcopy(slot) for slot in slots}
 
@@ -131,6 +133,7 @@ class DialogueStateTracker(object):
 
         return {
             "sender_id": self.sender_id,
+            "page_id": self.page_id,
             "slots": self.current_slot_values(),
             "latest_message": self.latest_message.parse_data,
             "latest_event_time": latest_event_time,

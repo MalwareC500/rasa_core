@@ -4,7 +4,7 @@ import json
 import logging
 import pickle
 # noinspection PyPep8Naming
-from typing import Text, Optional, List, KeysView
+from typing import Text, Optional, List, KeysView, Dict, Any
 
 from rasa_core.actions.action import ACTION_LISTEN_NAME
 from rasa_core.broker import EventChannel
@@ -58,28 +58,32 @@ class TrackerStore(object):
         else:
             return InMemoryTrackerStore(domain)
 
-    def get_or_create_tracker(self, sender_id, max_event_history=None):
-        tracker = self.retrieve(sender_id)
+    def get_or_create_tracker(self, ids, max_event_history=None):
+        tracker = self.retrieve(ids)
         self.max_event_history = max_event_history
         if tracker is None:
-            tracker = self.create_tracker(sender_id)
+            tracker = self.create_tracker(ids)
         return tracker
 
-    def init_tracker(self, sender_id):
+    def init_tracker(self, ids):
+        logger.info(ids)
+        sender_id = ids["sender_id"]
+        page_id = ids["page_id"]
         if self.domain:
             return DialogueStateTracker(
                 sender_id,
                 self.domain.slots,
-                max_event_history=self.max_event_history)
+                max_event_history=self.max_event_history,
+                page_id=page_id)
         else:
             return None
 
-    def create_tracker(self, sender_id, append_action_listen=True):
+    def create_tracker(self, ids, append_action_listen=True):
         """Creates a new tracker for the sender_id.
 
         The tracker is initially listening."""
 
-        tracker = self.init_tracker(sender_id)
+        tracker = self.init_tracker(ids)
         if tracker:
             if append_action_listen:
                 tracker.update(ActionExecuted(ACTION_LISTEN_NAME))
@@ -89,7 +93,7 @@ class TrackerStore(object):
     def save(self, tracker):
         raise NotImplementedError()
 
-    def retrieve(self, sender_id: Text) -> Optional[DialogueStateTracker]:
+    def retrieve(self, ids: Dict[Text, Any]) -> Optional[DialogueStateTracker]:
         raise NotImplementedError()
 
     def stream_events(self, tracker: DialogueStateTracker) -> None:
@@ -112,9 +116,9 @@ class TrackerStore(object):
         dialogue = tracker.as_dialogue()
         return pickle.dumps(dialogue)
 
-    def deserialise_tracker(self, sender_id, _json):
+    def deserialise_tracker(self, ids, _json):
         dialogue = pickle.loads(_json)
-        tracker = self.init_tracker(sender_id)
+        tracker = self.init_tracker(ids)
         tracker.recreate_from_dialogue(dialogue)
         return tracker
 
@@ -131,13 +135,15 @@ class InMemoryTrackerStore(TrackerStore):
         if self.event_broker:
             self.stream_events(tracker)
         serialised = InMemoryTrackerStore.serialise_tracker(tracker)
-        self.store[tracker.sender_id] = serialised
+        self.store["-".join([tracker.page_id, tracker.sender_id])] = serialised
 
-    def retrieve(self, sender_id: Text) -> Optional[DialogueStateTracker]:
+    def retrieve(self, ids: Dict[Text, Any]) -> Optional[DialogueStateTracker]:
+        sender_id = ids["sender_id"]
+        page_id = ids["page_id"]
         if sender_id in self.store:
             logger.debug('Recreating tracker for '
-                         'id \'{}\''.format(sender_id))
-            return self.deserialise_tracker(sender_id, self.store[sender_id])
+                         'user_id \'{}\' and page_id \'{}\''.format(sender_id, page_id))
+            return self.deserialise_tracker(ids, self.store["-".join([page_id, sender_id])])
         else:
             logger.debug('Creating a new tracker for '
                          'id \'{}\'.'.format(sender_id))

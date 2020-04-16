@@ -45,6 +45,7 @@ class Messenger(BaseMessenger):
     def message(self, message: Dict[Text, Any]) -> None:
         """Handle an incoming event from the fb webhook."""
 
+        # logger.info(message)
         if self._is_user_message(message):
             text = message['message']['text']
         elif self._is_audio_message(message):
@@ -58,20 +59,23 @@ class Messenger(BaseMessenger):
                            "handle. Message: {}".format(message))
             return
 
-        self._handle_user_message(text, self.get_user_id())
+        self._handle_user_message(text, self.get_user_id(), self.get_page_id())
 
     def postback(self, message: Dict[Text, Any]) -> None:
         """Handle a postback (e.g. quick reply button)."""
 
+        # logger.info(message)
         text = message['postback']['payload']
-        self._handle_user_message(text, self.get_user_id())
+        self._handle_user_message(text, self.get_user_id(), self.get_page_id())
 
-    def _handle_user_message(self, text: Text, sender_id: Text) -> None:
+    def _handle_user_message(self, text: Text, sender_id: Text, page_id: Text = None) -> None:
         """Pass on the text to the dialogue engine for processing."""
+
+        logger.info(page_id)
 
         out_channel = MessengerBot(self.client)
         user_msg = UserMessage(text, out_channel, sender_id,
-                               input_channel=self.name())
+                               input_channel=self.name(), page_id=page_id)
 
         # noinspection PyBroadException
         try:

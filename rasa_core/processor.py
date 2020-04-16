@@ -69,8 +69,11 @@ class MessageProcessor(object):
     def handle_message(self, message: UserMessage) -> Optional[List[Text]]:
         """Handle a single message with this processor."""
 
+        logger.info(message.page_id)
+
         # preprocess message if necessary
         tracker = self.log_message(message)
+        # logger.info(tracker)
         if not tracker:
             return None
 
@@ -114,7 +117,8 @@ class MessageProcessor(object):
             message.text = self.message_preprocessor(message.text)
         # we have a Tracker instance for each user
         # which maintains conversation state
-        tracker = self._get_tracker(message.sender_id)
+        ids = {"sender_id": message.sender_id, "page_id": message.page_id}
+        tracker = self._get_tracker(ids)
         if tracker:
             self._handle_message_with_tracker(message, tracker)
             # save tracker state to continue conversation from this state
@@ -428,10 +432,10 @@ class MessageProcessor(object):
             e.timestamp = time.time()
             tracker.update(e)
 
-    def _get_tracker(self, sender_id: Text) -> Optional[DialogueStateTracker]:
+    def _get_tracker(self, ids: Dict[Text, Any]) -> Optional[DialogueStateTracker]:
 
-        sender_id = sender_id or UserMessage.DEFAULT_SENDER_ID
-        tracker = self.tracker_store.get_or_create_tracker(sender_id)
+        # sender_id = sender_id or UserMessage.DEFAULT_SENDER_ID
+        tracker = self.tracker_store.get_or_create_tracker(ids)
         return tracker
 
     def _save_tracker(self, tracker):

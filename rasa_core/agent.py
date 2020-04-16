@@ -304,6 +304,8 @@ class Agent(object):
     ) -> Optional[List[Text]]:
         """Handle a single message."""
 
+        logger.info(message.page_id)
+
         if not isinstance(message, UserMessage):
             logger.warning("Passing a text to `agent.handle_message(...)` is "
                            "deprecated. Rather use `agent.handle_text(...)`.")

@@ -22,6 +22,7 @@ class UserMessage(object):
      Includes the channel the responses should be sent to."""
 
     DEFAULT_SENDER_ID = "default"
+    DEFAULT_PAGE_ID = "default_page_id"
 
     def __init__(self,
                  text: Optional[Text],
@@ -29,8 +30,11 @@ class UserMessage(object):
                  sender_id: Text = None,
                  parse_data: Dict[Text, Any] = None,
                  input_channel: Text = None,
-                 message_id: Text = None
+                 message_id: Text = None,
+                 page_id: Text = None
                  ) -> None:
+
+                 
         if text:
             self.text = text.strip()
         else:
@@ -50,6 +54,11 @@ class UserMessage(object):
             self.sender_id = str(sender_id)
         else:
             self.sender_id = self.DEFAULT_SENDER_ID
+
+        if page_id is not None:
+            self.page_id = str(page_id)
+        else:
+            self.page_id = self.DEFAULT_PAGE_ID
 
         self.input_channel = input_channel
 
