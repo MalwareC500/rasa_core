@@ -12,6 +12,8 @@ from rasa_core.interpreter import NaturalLanguageInterpreter
 from rasa_core.tracker_store import TrackerStore
 from rasa_core.utils import read_yaml_file, AvailableEndpoints
 
+from rasa_core.version import __version__
+
 logger = logging.getLogger()  # get the root logger
 
 
@@ -95,7 +97,7 @@ def start_server(input_channels,
     """Run the agent."""
     from rasa_core import server
     from flask import Flask
-    from flask_cors import CORS
+    from flask_cors import CORS, cross_origin
 
     if enable_api:
         app = server.create_app(initial_agent,
@@ -106,6 +108,15 @@ def start_server(input_channels,
     else:
         app = Flask(__name__)
         CORS(app, resources={r"/*": {"origins": cors or ""}})
+
+        cors_origins = cors or []
+        @app.route("/",
+               methods=['GET', 'OPTIONS'])
+        @cross_origin(origins=cors_origins)
+        def hello():
+            """Check if the server is running and responds with the version."""
+            return "hello from Rasa Core: " + __version__
+
 
     if input_channels:
         rasa_core.channels.channel.register(input_channels,
