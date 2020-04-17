@@ -217,6 +217,7 @@ class MongoTrackerStore(TrackerStore):
 
     def _ensure_indices(self):
         self.conversations.create_index("sender_id")
+        self.conversations.create_index("page_id")
 
     def save(self, tracker, timeout=None):
         if self.event_broker:
@@ -225,19 +226,21 @@ class MongoTrackerStore(TrackerStore):
         state = tracker.current_state(EventVerbosity.ALL)
 
         self.conversations.update_one(
-            {"sender_id": tracker.sender_id},
+            {"sender_id": tracker.sender_id, "page_id": tracker.page_id},
             {"$set": state},
             upsert=True)
 
-    def retrieve(self, sender_id):
-        stored = self.conversations.find_one({"sender_id": sender_id})
+    def retrieve(self, ids):
+        sender_id = ids['sender_id']
+        page_id = ids['page_id']
+        stored = self.conversations.find_one({"sender_id": sender_id, "page_id": page_id})
 
         # look for conversations which have used an `int` sender_id in the past
         # and update them.
         if stored is None and sender_id.isdigit():
             from pymongo import ReturnDocument
             stored = self.conversations.find_one_and_update(
-                {"sender_id": int(sender_id)},
+                {"sender_id": int(sender_id), "page_id": int(page_id)},
                 {"$set": {"sender_id": str(sender_id)}},
                 return_document=ReturnDocument.AFTER)
 
@@ -245,7 +248,8 @@ class MongoTrackerStore(TrackerStore):
             if self.domain:
                 return DialogueStateTracker.from_dict(sender_id,
                                                       stored.get("events"),
-                                                      self.domain.slots)
+                                                      self.domain.slots,
+                                                      page_id=page_id)
             else:
                 logger.warning("Can't recreate tracker from mongo storage "
                                "because no domain is set. Returning `None` "

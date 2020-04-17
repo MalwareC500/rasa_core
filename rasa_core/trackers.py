@@ -53,7 +53,8 @@ class DialogueStateTracker(object):
                   sender_id: Text,
                   events_as_dict: List[Dict[Text, Any]],
                   slots: List[Slot],
-                  max_event_history: Optional[int] = None
+                  max_event_history: Optional[int] = None,
+                  page_id: Text = None
                   ) -> 'DialogueStateTracker':
         """Create a tracker from dump.
 
