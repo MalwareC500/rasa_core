@@ -62,7 +62,6 @@ class TrackerStore(object):
         tracker = self.retrieve(sender_id, page_id)
         self.max_event_history = max_event_history
         if tracker is None:
-            print("what the heck?")
             tracker = self.create_tracker(sender_id, page_id)
         return tracker
 

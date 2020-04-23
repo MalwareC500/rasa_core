@@ -57,7 +57,7 @@ class Dispatcher(object):
                                        "attachment": message.get("image")})
 
         self.latest_bot_messages.append(bot_message)
-        self.output_channel.send_response(self.sender_id, message)
+        self.output_channel.send_response(self.sender_id, self.page_id, message)
 
     def utter_message(self, text: Text) -> None:
         """"Send a text to the output channel"""
@@ -66,7 +66,7 @@ class Dispatcher(object):
                                  data=None)
 
         self.latest_bot_messages.append(bot_message)
-        self.output_channel.send_text_message(self.sender_id, text)
+        self.output_channel.send_text_message(self.sender_id, self.page_id, text)
 
     def utter_custom_message(self, *elements: Dict[Text, Any]) -> None:
         """Sends a message with custom elements to the output channel."""
@@ -75,7 +75,7 @@ class Dispatcher(object):
                                  data={"elements": elements})
 
         self.latest_bot_messages.append(bot_message)
-        self.output_channel.send_custom_message(self.sender_id, elements)
+        self.output_channel.send_custom_message(self.sender_id, self.page_id, elements)
 
     def utter_button_message(self,
                              text: Text,
@@ -87,7 +87,7 @@ class Dispatcher(object):
                                  data={"buttons": buttons})
 
         self.latest_bot_messages.append(bot_message)
-        self.output_channel.send_text_with_buttons(self.sender_id, text,
+        self.output_channel.send_text_with_buttons(self.sender_id, self.page_id, text,
                                                    buttons,
                                                    **kwargs)
 
@@ -97,7 +97,7 @@ class Dispatcher(object):
                                  data={"attachment": attachment})
 
         self.latest_bot_messages.append(bot_message)
-        self.output_channel.send_image_url(self.sender_id, attachment)
+        self.output_channel.send_image_url(self.sender_id, self.page_id, attachment)
 
     # TODO: deprecate this function
     def utter_button_template(self,

@@ -160,47 +160,48 @@ class OutputChannel(object):
         """Every output channel needs a name to identify it."""
         return cls.__name__
 
-    def send_response(self, recipient_id: Text,
+    def send_response(self, recipient_id: Text, page_id: Text,
                       message: Dict[Text, Any]) -> None:
         """Send a message to the client."""
 
         if message.get("elements"):
-            self.send_custom_message(recipient_id, message.get("elements"))
+            self.send_custom_message(recipient_id, page_id, message.get("elements"))
 
         elif message.get("buttons"):
-            self.send_text_with_buttons(recipient_id,
+            self.send_text_with_buttons(recipient_id, page_id,
                                         message.get("text"),
                                         message.get("buttons"))
         elif message.get("text"):
-            self.send_text_message(recipient_id,
+            self.send_text_message(recipient_id, page_id,
                                    message.get("text"))
 
         # if there is an image we handle it separately as an attachment
         if message.get("image"):
-            self.send_image_url(recipient_id, message.get("image"))
+            self.send_image_url(recipient_id, page_id, message.get("image"))
 
         if message.get("attachment"):
-            self.send_attachment(recipient_id, message.get("attachment"))
+            self.send_attachment(recipient_id, page_id, message.get("attachment"))
 
-    def send_text_message(self, recipient_id: Text, message: Text) -> None:
+    def send_text_message(self, recipient_id: Text, page_id:Text, message: Text) -> None:
         """Send a message through this channel."""
 
         raise NotImplementedError("Output channel needs to implement a send "
                                   "message for simple texts.")
 
-    def send_image_url(self, recipient_id: Text, image_url: Text) -> None:
+    def send_image_url(self, recipient_id: Text, page_id, image_url: Text) -> None:
         """Sends an image. Default will just post the url as a string."""
 
-        self.send_text_message(recipient_id, "Image: {}".format(image_url))
+        self.send_text_message(recipient_id, page_id, "Image: {}".format(image_url))
 
-    def send_attachment(self, recipient_id: Text, attachment: Text) -> None:
+    def send_attachment(self, recipient_id: Text, page_id, attachment: Text) -> None:
         """Sends an attachment. Default will just post as a string."""
 
-        self.send_text_message(recipient_id,
+        self.send_text_message(recipient_id, page_id,
                                "Attachment: {}".format(attachment))
 
     def send_text_with_buttons(self,
                                recipient_id: Text,
+                               page_id: Text,
                                message: Text,
                                buttons: List[Dict[Text, Any]],
                                **kwargs: Any) -> None:
@@ -208,13 +209,13 @@ class OutputChannel(object):
 
         Default implementation will just post the buttons as a string."""
 
-        self.send_text_message(recipient_id, message)
+        self.send_text_message(recipient_id, page_id, message)
         for idx, button in enumerate(buttons):
             button_msg = button_to_string(button, idx)
-            self.send_text_message(recipient_id, button_msg)
+            self.send_text_message(recipient_id, page_id, button_msg)
 
     def send_custom_message(self,
-                            recipient_id: Text,
+                            recipient_id: Text, page_id: Text,
                             elements: Iterable[Dict[Text, Any]]) -> None:
         """Sends elements to the output.
 
@@ -225,7 +226,7 @@ class OutputChannel(object):
                 title=element.get('title', ''),
                 subtitle=element.get('subtitle', ''))
             self.send_text_with_buttons(
-                recipient_id, element_msg, element.get('buttons', []))
+                recipient_id, page_id, element_msg, element.get('buttons', []))
 
 
 class CollectingOutputChannel(OutputChannel):
