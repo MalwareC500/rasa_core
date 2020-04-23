@@ -37,7 +37,7 @@ class TrackerWithCachedStates(DialogueStateTracker):
                  domain=None,
                  is_augmented=False):
         super(TrackerWithCachedStates, self).__init__(
-            sender_id, slots, max_event_history)
+            sender_id, "", slots, max_event_history)
         self._states = None
         self.domain = domain
         # T/F property to filter augmented stories
