@@ -174,10 +174,17 @@ class MessengerBot(OutputChannel):
             text = messages.pop()
 
             for message in messages:
+<<<<<<< HEAD
                 self.send_text_message(recipient_id, page_id, message)
             
             self.send_action_typing_on(recipient_id, page_id)
 
+=======
+                self.send_text_message(recipient_id, message)
+
+            self.messenger_client.send_action(
+                "typing_on", {"sender": {"id": recipient_id}})
+>>>>>>> 0.14.5v1
             # Currently there is no predefined way to create a message with
             # buttons in the fbmessenger framework - so we need to create the
             # payload on our own

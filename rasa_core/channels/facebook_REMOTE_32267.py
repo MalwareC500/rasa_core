@@ -11,8 +11,6 @@ from flask import Blueprint, request, jsonify, render_template
 
 from rasa_core.channels.channel import UserMessage, OutputChannel, InputChannel
 
-from rasa_core.token_store import MongoTokenStore
-
 logger = logging.getLogger(__name__)
 
 
@@ -111,53 +109,34 @@ class MessengerBot(OutputChannel):
     def __init__(self, messenger_client: MessengerClient) -> None:
 
         self.messenger_client = messenger_client
-        self.token = MongoTokenStore("endpoints.yml")
         super(MessengerBot, self).__init__()
 
-    def set_access_token(self, page_id: Text) -> None:
-        page_access_token = self.token.retrieve(page_id)
-        self.messenger_client.set_page_access_token(page_access_token)
-
-    def send_action_typing_on(self, recipient_id: Text, page_id: Text) -> None:
-
-        self.set_access_token(page_id)
-        self.messenger_client.send_action(
-            "typing_on", {"sender": {"id": recipient_id}})
-
-    def send_payload(self, recipient_id: Text, page_id: Text, payload: Dict[Text, Any]) -> None:
-
-        self.set_access_token(page_id)
-        self.messenger_client.send(payload,
-                                   {"sender": {"id": recipient_id}},
-                                   'RESPONSE')
-
-    def send(self, recipient_id: Text, page_id: Text, element: Any) -> None:
+    def send(self, recipient_id: Text, element: Any) -> None:
         """Sends a message to the recipient using the messenger client."""
 
         # this is a bit hacky, but the client doesn't have a proper API to
         # send messages but instead expects the incoming sender to be present
         # which we don't have as it is stored in the input channel.
-
-        self.set_access_token(page_id)
         self.messenger_client.send(element.to_dict(),
                                    {"sender": {"id": recipient_id}},
                                    'RESPONSE')
 
-    def send_text_message(self, recipient_id: Text, page_id: Text, message: Text) -> None:
+    def send_text_message(self, recipient_id: Text, message: Text) -> None:
         """Send a message through this channel."""
 
-        logger.info("Sending message to {0}: {1}".format(page_id, message))
+        logger.info("Sending message: " + message)
 
         for message_part in message.split("\n\n"):
-            self.send_action_typing_on(recipient_id, page_id)
-            self.send(recipient_id, page_id, FBText(text=message_part))
+            self.messenger_client.send_action(
+                "typing_on", {"sender": {"id": recipient_id}})
+            self.send(recipient_id, FBText(text=message_part))
 
-    def send_image_url(self, recipient_id: Text, page_id: Text, image_url: Text) -> None:
+    def send_image_url(self, recipient_id: Text, image_url: Text) -> None:
         """Sends an image. Default will just post the url as a string."""
 
-        self.send(recipient_id, page_id, attachments.Image(url=image_url))
+        self.send(recipient_id, attachments.Image(url=image_url))
 
-    def send_text_with_buttons(self, recipient_id: Text, page_id: Text, text: Text,
+    def send_text_with_buttons(self, recipient_id: Text, text: Text,
                                buttons: List[Dict[Text, Any]],
                                **kwargs: Any) -> None:
         """Sends buttons to the output."""
@@ -167,17 +146,17 @@ class MessengerBot(OutputChannel):
             logger.warning(
                 "Facebook API currently allows only up to 3 buttons. "
                 "If you add more, all will be ignored.")
-            self.send_text_message(recipient_id, page_id, text)
+            self.send_text_message(recipient_id, text)
         else:
             self._add_postback_info(buttons)
             messages = text.split("\n\n")
             text = messages.pop()
 
             for message in messages:
-                self.send_text_message(recipient_id, page_id, message)
-            
-            self.send_action_typing_on(recipient_id, page_id)
+                self.send_text_message(recipient_id, message)
 
+            self.messenger_client.send_action(
+                "typing_on", {"sender": {"id": recipient_id}})
             # Currently there is no predefined way to create a message with
             # buttons in the fbmessenger framework - so we need to create the
             # payload on our own
@@ -191,10 +170,11 @@ class MessengerBot(OutputChannel):
                     }
                 }
             }
-            self.send_payload(recipient_id, page_id, payload)
-            
+            self.messenger_client.send(payload,
+                                       {"sender": {"id": recipient_id}},
+                                       'RESPONSE')
 
-    def send_custom_message(self, recipient_id: Text, page_id: Text,
+    def send_custom_message(self, recipient_id: Text,
                             elements: List[Dict[Text, Any]]) -> None:
         """Sends elements to the output."""
 
