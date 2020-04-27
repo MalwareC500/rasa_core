@@ -64,7 +64,7 @@ rasa_core/channels/socketio.py
 rasa_core/channels/telegram.py
 rasa_core/channels/twilio.py
 rasa_core/channels/webexteams.py
-rasa_core/channels/fb-login/static/index.html
+rasa_core/channels/fb-login/index.html
 rasa_core/channels/fb-login/static/css/login.png
 rasa_core/channels/fb-login/static/css/logout.png
 rasa_core/channels/fb-login/static/js/init.js
