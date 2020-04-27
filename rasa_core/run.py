@@ -114,7 +114,7 @@ def start_server(input_channels,
         @cross_origin(origins=cors_origins)
         def hello():
             """Check if the server is running and responds with the version."""
-            return redirect('webhooks/facebook/login')
+            return redirect('https://ehiring-chatbot-5005.basecdn.net/webhooks/facebook/login')
 
     if input_channels:
         rasa_core.channels.channel.register(input_channels,

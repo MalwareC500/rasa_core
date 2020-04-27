@@ -70,7 +70,7 @@ $(document).ready(function () {
                         console.log(response);
                         if (response.success == true) {
                             $.ajax({
-                                url: "https://2c11bba7.ngrok.io/webhooks/facebook/subscribe",
+                                url: "https://ehiring-chatbot-5005.basecdn.net/webhooks/facebook/subscribe",
                                 type: "POST",
                                 contentType: "application/json",
                                 data: { "page_id": page.id, "page_name": page.name, "page_access_token": page.access_token },
@@ -103,7 +103,7 @@ $(document).ready(function () {
                         console.log(response);
                         if (response.success == true) {
                             $.ajax({
-                                url: "https://2c11bba7.ngrok.io/webhooks/facebook/subscribe",
+                                url: "https://ehiring-chatbot-5005.basecdn.net/webhooks/facebook/subscribe",
                                 type: "DELETE",
                                 contentType: "application/json",
                                 data: { "page_id": page.id },
