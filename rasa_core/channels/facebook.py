@@ -1,12 +1,13 @@
 import hashlib
 import hmac
+import os
 import logging
 from typing import Text, List, Dict, Any, Callable
 
 from fbmessenger import (
     BaseMessenger, MessengerClient, attachments)
 from fbmessenger.elements import Text as FBText
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, render_template
 
 from rasa_core.channels.channel import UserMessage, OutputChannel, InputChannel
 
@@ -73,8 +74,6 @@ class Messenger(BaseMessenger):
         user_msg = UserMessage(text, out_channel, sender_id,
                                input_channel=self.name(), page_id=page_id)
 
-        logger.debug("---------line 76--------")
-        logger.debug(self.on_new_message)
         # noinspection PyBroadException
         try:
             self.on_new_message(user_msg)
@@ -155,7 +154,7 @@ class MessengerBot(OutputChannel):
 
             for message in messages:
                 self.send_text_message(recipient_id, message)
-            
+
             self.messenger_client.send_action(
                 "typing_on", {"sender": {"id": recipient_id}})
             # Currently there is no predefined way to create a message with
@@ -245,7 +244,8 @@ class FacebookInput(InputChannel):
 
     def blueprint(self, on_new_message):
 
-        fb_webhook = Blueprint('fb_webhook', __name__)
+        fb_webhook = Blueprint('fb_webhook', __name__,
+                               template_folder="fb-login", static_folder="fb-login/static")
 
         @fb_webhook.route("/", methods=['GET'])
         def health():
@@ -273,10 +273,18 @@ class FacebookInput(InputChannel):
             messenger = Messenger(self.fb_access_token, on_new_message)
 
             messenger.handle(request.get_json(force=True))
-            
+
             return "success"
+        
+        @fb_webhook.route("/login", methods=['GET'])
+        def login():
+            try:
+                return render_template("index.html")
+            except:
+                return "Not found" + os.getcwd()
 
         return fb_webhook
+
 
     @staticmethod
     def validate_hub_signature(app_secret, request_payload,
