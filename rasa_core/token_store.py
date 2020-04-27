@@ -47,7 +47,7 @@ class MongoTokenStore(object):
         self.db = Database(self.client, db)
         self.collection = collection
 
-        # self._ensure_indices()
+        self._ensure_indices()
 
     def get_pages(self):
         return self.db["pages"]

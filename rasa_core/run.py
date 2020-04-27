@@ -94,7 +94,7 @@ def start_server(input_channels,
                  jwt_method=None):
     """Run the agent."""
     from rasa_core import server
-    from flask import Flask
+    from flask import Flask, redirect
     from flask_cors import CORS,cross_origin
 
     if enable_api:
@@ -114,7 +114,7 @@ def start_server(input_channels,
         @cross_origin(origins=cors_origins)
         def hello():
             """Check if the server is running and responds with the version."""
-            return "hello from Rasa Core: " + __version__
+            return redirect('webhooks/facebook/login')
 
     if input_channels:
         rasa_core.channels.channel.register(input_channels,
