@@ -22,7 +22,7 @@ class MongoTokenStore(object):
                  username=None,
                  password=None,
                  auth_source="admin",
-                 collection="pages"):
+                 collection=""):
         from pymongo.database import Database
         from pymongo import MongoClient
 
@@ -49,9 +49,19 @@ class MongoTokenStore(object):
 
         # self._ensure_indices()
 
+    def get_pages(self):
+        return self.db["pages"]
+
+    def get_conversations(self):
+        return self.db["conversations"]
+
     @property
     def pages(self):
-        return self.db[self.collection]
+        return self.db["pages"]
+    
+    @property
+    def conversations(self):
+        return self.db["conversations"]
 
     def _ensure_indices(self):
         self.pages.create_index("page_id")

@@ -3,6 +3,7 @@ import hmac
 import os
 import logging
 from typing import Text, List, Dict, Any, Callable
+from urllib.parse import parse_qs
 
 from fbmessenger import (
     BaseMessenger, MessengerClient, attachments)
@@ -10,7 +11,6 @@ from fbmessenger.elements import Text as FBText
 from flask import Blueprint, request, jsonify, render_template
 
 from rasa_core.channels.channel import UserMessage, OutputChannel, InputChannel
-
 from rasa_core.token_store import MongoTokenStore
 
 logger = logging.getLogger(__name__)
@@ -175,7 +175,7 @@ class MessengerBot(OutputChannel):
 
             for message in messages:
                 self.send_text_message(recipient_id, page_id, message)
-            
+
             self.send_action_typing_on(recipient_id, page_id)
 
             # Currently there is no predefined way to create a message with
@@ -192,7 +192,6 @@ class MessengerBot(OutputChannel):
                 }
             }
             self.send_payload(recipient_id, page_id, payload)
-            
 
     def send_custom_message(self, recipient_id: Text, page_id: Text,
                             elements: List[Dict[Text, Any]]) -> None:
@@ -261,6 +260,7 @@ class FacebookInput(InputChannel):
         self.fb_verify = fb_verify
         self.fb_secret = fb_secret
         self.fb_access_token = fb_access_token
+        self.token = MongoTokenStore("endpoints.yml")
 
     def blueprint(self, on_new_message):
 
@@ -295,7 +295,7 @@ class FacebookInput(InputChannel):
             messenger.handle(request.get_json(force=True))
 
             return "success"
-        
+
         @fb_webhook.route("/login", methods=['GET'])
         def login():
             try:
@@ -303,8 +303,29 @@ class FacebookInput(InputChannel):
             except:
                 return "Not found" + os.getcwd()
 
-        return fb_webhook
+        @fb_webhook.route("/subscribe", methods=['POST'])
+        def subscribe_app():
+            data = request.get_data()
+            data = data.decode('utf-8')
+            request_params = parse_qs(data)
+            self.token.get_pages().update_one(
+                {"page_id": request_params['page_id'][0]},
+                {"$set": {"page_name": request_params['page_name'][0],
+                          "page_access_token": request_params["page_access_token"][0], "page_persistent_menu": [],
+                          "page_secret": self.fb_secret, "page_verify": self.fb_verify}},
+                upsert=True
+            )
+            return jsonify({"status": "success"})
 
+        @fb_webhook.route("/subscribe", methods=['DELETE'])
+        def unsubscribe_app():
+            data = request.get_data()
+            data = data.decode('utf-8')
+            request_params = parse_qs(data)
+            self.token.get_pages().delete_one(
+                {"page_id": request_params['page_id'][0]})
+            return jsonify({"status": "success"})
+        return fb_webhook
 
     @staticmethod
     def validate_hub_signature(app_secret, request_payload,
