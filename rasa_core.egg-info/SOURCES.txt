@@ -38,6 +38,7 @@ rasa_core/server.py
 rasa_core/slots.py
 rasa_core/test.py
 rasa_core/tracker_store.py
+rasa_core/token_store.py
 rasa_core/trackers.py
 rasa_core/train.py
 rasa_core/utils.py
