@@ -22,6 +22,7 @@ rasa_core/agent.py
 rasa_core/broker.py
 rasa_core/config.py
 rasa_core/constants.py
+rasa_core/content_server.py
 rasa_core/conversation.py
 rasa_core/default_config.yml
 rasa_core/dispatcher.py
