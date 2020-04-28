@@ -32,3 +32,5 @@ def endpoint_app(webhook):
     @webhook.route("/content/<page_id>/answers", methods=["GET"])
     def get_answers(page_id):
         return None
+
+    
