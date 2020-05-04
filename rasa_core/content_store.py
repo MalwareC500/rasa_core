@@ -1,3 +1,5 @@
+import os
+
 import itertools
 
 import json
@@ -14,7 +16,8 @@ from rasa_core.utils import read_yaml_file
 
 logger = logging.getLogger(__name__)
 
-class MongoTokenStore(object):
+
+class ContentStore(object):
     def __init__(self,
                  endpoint_file="endpoints.yml",
                  host="mongodb://localhost:27017",
@@ -44,19 +47,14 @@ class MongoTokenStore(object):
                                   connect=False)
 
         self.db = Database(self.client, db)
-        # self._ensure_indices()
 
     @property
     def answers(self):
         return self.db["answers"]
-    
+
     @property
     def options(self):
         return self.db["options"]
-
-    def _ensure_indices(self):
-        self.answers.create_index("page_id")
-        self.options.create_index("page_id")
 
     def get_answers(self, page_id):
         stored = self.answers.find({"page_id": page_id})
@@ -71,6 +69,46 @@ class MongoTokenStore(object):
                 return_document=ReturnDocument.AFTER)
 
         if stored is not None:
-            return stored["page_access_token"]
+            return stored
         else:
             return None
+
+    def get_utter(self, page_id, utter_name):
+        stored = self.answers.find_one({"page_id": page_id, "utter_name": utter_name})
+
+        # look for conversations which have used an `int` page_id in the past
+        # and update them.
+        if stored is None and page_id.isdigit():
+            from pymongo import ReturnDocument
+            stored = self.answers.find_one_and_update(
+                {"page_id": int(page_id), "utter_name": utter_name},
+                {"$set": {"page_id": str(page_id), "utter_name": utter_name}},
+                return_document=ReturnDocument.AFTER)
+
+        if stored is not None:
+            return stored
+        else:
+            return None
+
+    def init_answers(self, page_id):
+        data = read_yaml_file("init/default_answers.yml")
+        data = data["templates"]
+        try:
+            self.answers.create_index("page_id")
+            self.answers.create_index("utter_name")
+        except Exception as ex:
+            logger.error(ex)
+        try:
+            for key, value in data.items():
+                self.answers.update_one(
+                    {"page_id": page_id, "utter_name": key},
+                    {"$set": {"utter_payload": value}},
+                    upsert=True
+                )
+        except Exception as ex:
+            logger.error(ex)
+            return "Error"
+        return "ok"
+
+    def del_answers(self, page_id):
+        self.answers.remove({"page_id": page_id})

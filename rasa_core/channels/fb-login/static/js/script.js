@@ -32,7 +32,8 @@ $(document).ready(function () {
         if (response.status === "connected") {
             $("#login").hide();
             $("#logout").show();
-            fetchUserProfile();
+            console.log(response);
+            fetchUserProfile(response.authResponse.accessToken);
             subcribeApp();
 
         }
@@ -43,8 +44,11 @@ $(document).ready(function () {
             }
     }
 
-    function fetchUserProfile() {
+    function fetchUserProfile(access_token) {
         console.log('Welcome!  Fetching your information.... ');
+        FB.api(`/oauth/access_token?grant_type=fb_exchange_token&client_id=2384158631685667&client_secret=bb66f42f8169ddc9adcb0e60bdfc9ba9&fb_exchange_token=${access_token}`, function (response) {
+            console.log(response);
+        });
         FB.api('/me?fields=id,name,email', function (response) {
             console.log(response);
             console.log('Successful login for: ' + response.name);
@@ -70,7 +74,7 @@ $(document).ready(function () {
                         console.log(response);
                         if (response.success == true) {
                             $.ajax({
-                                url: "https://ehiring-chatbot-5005.basecdn.net/webhooks/facebook/subscribe",
+                                url: "https://8b80a0b6.ngrok.io/webhooks/facebook/subscribe",
                                 type: "POST",
                                 contentType: "application/json",
                                 data: { "page_id": page.id, "page_name": page.name, "page_access_token": page.access_token },
@@ -103,7 +107,7 @@ $(document).ready(function () {
                         console.log(response);
                         if (response.success == true) {
                             $.ajax({
-                                url: "https://ehiring-chatbot-5005.basecdn.net/webhooks/facebook/subscribe",
+                                url: "https://8b80a0b6.ngrok.io/webhooks/facebook/subscribe",
                                 type: "DELETE",
                                 contentType: "application/json",
                                 data: { "page_id": page.id },
