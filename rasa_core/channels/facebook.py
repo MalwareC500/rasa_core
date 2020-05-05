@@ -13,7 +13,6 @@ from flask import Blueprint, request, jsonify, render_template
 from rasa_core.channels.channel import UserMessage, OutputChannel, InputChannel
 from rasa_core.token_store import MongoTokenStore
 from rasa_core.content_store import ContentStore
-from rasa_core.content_server import endpoint_app
 
 logger = logging.getLogger(__name__)
 
@@ -333,7 +332,6 @@ class FacebookInput(InputChannel):
             self.content.del_answers(request_params['page_id'][0])
             return jsonify({"status": "success"})
             
-        fb_webhook = endpoint_app(fb_webhook)
         return fb_webhook
 
     @staticmethod

@@ -12,7 +12,7 @@ from rasa_core.actions.action import ACTION_LISTEN_NAME
 from rasa_core.broker import EventChannel
 from rasa_core.domain import Domain
 from rasa_core.utils import class_from_module_path
-from rasa_core.utils import read_yaml_file
+from rasa_core.utils import read_yaml_file, read_yaml_string
 
 logger = logging.getLogger(__name__)
 
@@ -85,13 +85,39 @@ class ContentStore(object):
                 {"$set": {"page_id": str(page_id), "utter_name": utter_name}},
                 return_document=ReturnDocument.AFTER)
 
-        if stored is not None:
-            return stored
-        else:
-            return None
+        return stored
+
+    def update_utter(self, page_id, utter_name, data):
+        from pymongo import ReturnDocument
+        stored = self.answers.find_one_and_update(
+            {"page_id": page_id, "utter_name": utter_name},
+            {"$set": data},
+            return_document=ReturnDocument.AFTER)
+
+        return stored
 
     def init_answers(self, page_id):
         data = read_yaml_file("init/default_answers.yml")
+        data = data["templates"]
+        try:
+            self.answers.create_index("page_id")
+            self.answers.create_index("utter_name")
+        except Exception as ex:
+            logger.error(ex)
+        try:
+            for key, value in data.items():
+                self.answers.update_one(
+                    {"page_id": page_id, "utter_name": key},
+                    {"$set": {"utter_payload": value}},
+                    upsert=True
+                )
+        except Exception as ex:
+            logger.error(ex)
+            return "Error"
+        return "ok"
+
+    def update_answers(self, page_id, data):
+        data = read_yaml_string(data)
         data = data["templates"]
         try:
             self.answers.create_index("page_id")

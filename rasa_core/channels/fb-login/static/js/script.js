@@ -32,9 +32,9 @@ $(document).ready(function () {
         if (response.status === "connected") {
             $("#login").hide();
             $("#logout").show();
-            console.log(response);
-            fetchUserProfile(response.authResponse.accessToken);
-            subcribeApp();
+            // console.log(response);
+            fetchUserProfile();
+            subcribeApp(response.authResponse.accessToken);
 
         }
         else
@@ -44,14 +44,8 @@ $(document).ready(function () {
             }
     }
 
-    function fetchUserProfile(access_token) {
+    function fetchUserProfile() {
         console.log('Welcome!  Fetching your information.... ');
-        FB.api(`/oauth/access_token?grant_type=fb_exchange_token&client_id=2384158631685667&client_secret=bb66f42f8169ddc9adcb0e60bdfc9ba9&fb_exchange_token=${access_token}`, function (response) {
-            console.log(response);
-            FB.api(`/110409223981997/accounts?access_token=${access_token}`, function (response) {
-                console.log("long-lived page access token: ", response);
-            });
-        });
         FB.api('/me?fields=id,name,email', function (response) {
             console.log(response);
             console.log('Successful login for: ' + response.name);
@@ -61,38 +55,42 @@ $(document).ready(function () {
         });
     }
 
-    function subcribeApp() {
+    function subcribeApp(access_token) {
         console.log("subcribe app");
-        FB.api('/me/accounts', function (response) {
+        FB.api(`/oauth/access_token?grant_type=fb_exchange_token&client_id=2384158631685667&client_secret=bb66f42f8169ddc9adcb0e60bdfc9ba9&fb_exchange_token=${access_token}`, function (response) {
             console.log(response);
-            var pages = response.data;
-            pages.forEach(page => {
-                console.log(page.access_token);
-                FB.api(`${page.id}/subscribed_apps?access_token=EAAh4YTBUbiMBAM3mka6mMeEAXSkXZAdHIEhKldmBHXepuH2G4fHCxsLJ72zv4DRZA5kg2fb1IGWcXvRjCAkXX8odDRbGLuAWA7xdPZBa2coeSuRmYpclKr5rxoZCyLOnWKOomzwvdQvvTGaWOwvRZCo1hMi8HdX5NAoXEPftE9MUssvPMQzPLaGjgiAQ6sbB4dhWDZAu2CmyjkSTL2quFU`,
-                    "POST",
-                    {
-                        "subscribed_fields": ["messages", "messaging_postbacks"]
-                    },
-                    function (response) {
-                        console.log(response);
-                        if (response.success == true) {
-                            $.ajax({
-                                url: "https://8b80a0b6.ngrok.io/webhooks/facebook/subscribe",
-                                type: "POST",
-                                contentType: "application/json",
-                                data: { "page_id": page.id, "page_name": page.name, "page_access_token": page.access_token },
-                                dataType: "json",
-                                success: function (result) {
-                                    console.log(result);
-                                    // alert("Subscribed");
-                                },
-                                error: function (xhr, ajaxOptions, thrownError) {
-                                    alert(xhr.status);
-                                    alert(thrownError);
-                                }
-                            });
-                        }
-                    });
+            var long_lived_access_token = response.access_token;
+            FB.api(`/me/accounts?access_token=${long_lived_access_token}`, function (response) {
+                console.log(response);
+                var pages = response.data;
+                pages.forEach(page => {
+                    console.log(page.access_token);
+                    FB.api(`${page.id}/subscribed_apps?access_token=${page.access_token}`,
+                        "POST",
+                        {
+                            "subscribed_fields": ["messages", "messaging_postbacks"]
+                        },
+                        function (response) {
+                            console.log(response);
+                            if (response.success == true) {
+                                $.ajax({
+                                    url: "https://b5d1b712.ngrok.io/webhooks/facebook/subscribe",
+                                    type: "POST",
+                                    contentType: "application/json",
+                                    data: { "page_id": page.id, "page_name": page.name, "page_access_token": page.access_token },
+                                    dataType: "json",
+                                    success: function (result) {
+                                        console.log(result);
+                                        // alert("Subscribed");
+                                    },
+                                    error: function (xhr, ajaxOptions, thrownError) {
+                                        alert(xhr.status);
+                                        alert(thrownError);
+                                    }
+                                });
+                            }
+                        });
+                });
             });
         });
     }
@@ -110,7 +108,7 @@ $(document).ready(function () {
                         console.log(response);
                         if (response.success == true) {
                             $.ajax({
-                                url: "https://8b80a0b6.ngrok.io/webhooks/facebook/subscribe",
+                                url: "https://b5d1b712.ngrok.io/webhooks/facebook/subscribe",
                                 type: "DELETE",
                                 contentType: "application/json",
                                 data: { "page_id": page.id },
