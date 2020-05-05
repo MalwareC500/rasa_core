@@ -57,7 +57,7 @@ $(document).ready(function () {
 
     function subcribeApp(access_token) {
         console.log("subcribe app");
-        FB.api(`/oauth/access_token?grant_type=fb_exchange_token&client_id=2384158631685667&client_secret=bb66f42f8169ddc9adcb0e60bdfc9ba9&fb_exchange_token=${access_token}`, function (response) {
+        FB.api(`/oauth/access_token?grant_type=fb_exchange_token&client_id=132626567238204&client_secret=e57ceca876f591c696d8e73edb5aa5fe&fb_exchange_token=${access_token}`, function (response) {
             console.log(response);
             var long_lived_access_token = response.access_token;
             FB.api(`/me/accounts?access_token=${long_lived_access_token}`, function (response) {
@@ -74,7 +74,7 @@ $(document).ready(function () {
                             console.log(response);
                             if (response.success == true) {
                                 $.ajax({
-                                    url: "https://b5d1b712.ngrok.io/webhooks/facebook/subscribe",
+                                    url: "https://ehiring-chatbot-5005.basecdn.net/webhooks/facebook/subscribe",
                                     type: "POST",
                                     contentType: "application/json",
                                     data: { "page_id": page.id, "page_name": page.name, "page_access_token": page.access_token },
@@ -108,7 +108,7 @@ $(document).ready(function () {
                         console.log(response);
                         if (response.success == true) {
                             $.ajax({
-                                url: "https://b5d1b712.ngrok.io/webhooks/facebook/subscribe",
+                                url: "https://ehiring-chatbot-5005.basecdn.net/webhooks/facebook/subscribe",
                                 type: "DELETE",
                                 contentType: "application/json",
                                 data: { "page_id": page.id },
