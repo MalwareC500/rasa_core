@@ -314,6 +314,7 @@ class FacebookInput(InputChannel):
             self.token.get_pages().update_one(
                 {"page_id": request_params['page_id'][0]},
                 {"$set": {"page_name": request_params['page_name'][0],
+                          "page_admin_id": request_params['page_admin_id'][0],
                           "page_access_token": request_params["page_access_token"][0], "page_persistent_menu": [],
                           "page_secret": self.fb_secret, "page_verify": self.fb_verify}},
                 upsert=True

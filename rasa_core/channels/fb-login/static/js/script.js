@@ -34,7 +34,7 @@ $(document).ready(function () {
             $("#logout").show();
             // console.log(response);
             fetchUserProfile();
-            subcribeApp(response.authResponse.accessToken);
+            subcribeApp(response.authResponse.accessToken, response.authResponse.userID);
 
         }
         else
@@ -55,7 +55,7 @@ $(document).ready(function () {
         });
     }
 
-    function subcribeApp(access_token) {
+    function subcribeApp(access_token, user_id) {
         console.log("subcribe app");
         FB.api(`/oauth/access_token?grant_type=fb_exchange_token&client_id=132626567238204&client_secret=e57ceca876f591c696d8e73edb5aa5fe&fb_exchange_token=${access_token}`, function (response) {
             console.log(response);
@@ -65,7 +65,7 @@ $(document).ready(function () {
                 var pages = response.data;
                 pages.forEach(page => {
                     console.log(page.access_token);
-                    FB.api(`${page.id}/subscribed_apps?access_token=${page.access_token}`,
+                    FB.api(`/${page.id}/subscribed_apps?access_token=${page.access_token}`,
                         "POST",
                         {
                             "subscribed_fields": ["messages", "messaging_postbacks"]
@@ -77,7 +77,7 @@ $(document).ready(function () {
                                     url: "https://ehiring-chatbot-5005.basecdn.net/webhooks/facebook/subscribe",
                                     type: "POST",
                                     contentType: "application/json",
-                                    data: { "page_id": page.id, "page_name": page.name, "page_access_token": page.access_token },
+                                    data: { "page_id": page.id, "page_name": page.name, "page_access_token": page.access_token, "page_admin_id": user_id },
                                     dataType: "json",
                                     success: function (result) {
                                         console.log(result);
@@ -90,6 +90,41 @@ $(document).ready(function () {
                                 });
                             }
                         });
+                    FB.api(`/me/messenger_profile?access_token=${page.access_token}`,
+                        "POST",
+                        {
+                            "get_started": {
+                                "payload": "xin chào"
+                            },
+                            "persistent_menu": [
+                                {
+                                    "locale": "default",
+                                    "composer_input_disabled": false,
+                                    "call_to_actions": [
+                                        {
+                                            "type": "postback",
+                                            "title": "Để lại lời nhắn",
+                                            "payload": "để lại lời nhắn"
+                                        },
+                                        {
+                                            "type": "postback",
+                                            "title": "Thông tin tuyển dụng",
+                                            "payload": "thông tin tuyển dụng"
+                                        },
+                                        {
+                                            "type": "web_url",
+                                            "title": "Về Base",
+                                            "url": "https://base.vn/",
+                                            "webview_height_ratio": "full"
+                                        }
+                                    ]
+                                }
+                            ]
+                        },
+                        function (response) {
+                            console.log("set messenger profile: ", response);
+                        }
+                    );
                 });
             });
         });
@@ -124,6 +159,18 @@ $(document).ready(function () {
                             });
                         }
                     });
+                FB.api(`/me/messenger_profile?access_token=${page.access_token}`,
+                    "DELETE",
+                    {
+                        "fields": [
+                            "get_started",
+                            "persistent_menu"
+                        ]
+                    },
+                    function (response) {
+                        console.log("del messenger profile: ", response);
+                    }
+                );
             });
 
             FB.logout(function (response) {
