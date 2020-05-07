@@ -185,7 +185,7 @@ $(document).ready(function () {
 
             statusChangeCallback(response, true);
 
-        }, { scope: 'manage_pages,pages_show_list,public_profile,email,read_insights,pages_messaging,pages_messaging_phone_number' });
+        }, { scope: 'manage_pages,pages_show_list,public_profile,email,pages_messaging,pages_messaging_phone_number' });
     }
 
     // logging out the user from Facebook

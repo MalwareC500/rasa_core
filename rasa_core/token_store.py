@@ -86,5 +86,22 @@ class MongoTokenStore(object):
         else:
             return None
 
+    def get_admin(self, page_id):
+        stored = self.pages.find_one({"page_id": page_id})
+
+        # look for conversations which have used an `int` sender_id in the past
+        # and update them.
+        if stored is None and page_id.isdigit():
+            from pymongo import ReturnDocument
+            stored = self.pages.find_one_and_update(
+                {"page_id": int(page_id)},
+                {"$set": {"page_id": str(page_id)}},
+                return_document=ReturnDocument.AFTER)
+
+        if stored is not None:
+            return stored["page_admin_id"]
+        else:
+            return None
+
     def keys(self):
         return [c["page_id"] for c in self.pages.find()]
