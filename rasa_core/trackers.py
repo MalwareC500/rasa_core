@@ -78,7 +78,7 @@ class DialogueStateTracker(object):
         return tracker
 
     def __init__(self, sender_id, page_id, slots,
-                 max_event_history=None):
+                 max_event_history=None, allow_steps=2):
         """Initialize the tracker.
 
         A set of events can be stored externally, and we will run through all
@@ -110,6 +110,7 @@ class DialogueStateTracker(object):
         self.latest_bot_utterance = None
         self._reset()
         self.active_form = {}
+        self.allow_steps = allow_steps
 
     ###
     # Public tracker interface
@@ -143,7 +144,8 @@ class DialogueStateTracker(object):
             "events": evts,
             "latest_input_channel": self.get_latest_input_channel(),
             "active_form": self.active_form,
-            "latest_action_name": self.latest_action_name
+            "latest_action_name": self.latest_action_name,
+            "allow_steps": self.allow_steps
         }
 
     def past_states(self, domain: 'Domain') -> deque:
@@ -246,7 +248,8 @@ class DialogueStateTracker(object):
         return DialogueStateTracker(UserMessage.DEFAULT_SENDER_ID,
                                     UserMessage.DEFAULT_PAGE_ID,
                                     self.slots.values(),
-                                    self._max_event_history)
+                                    self._max_event_history,
+                                    self.allow_steps)
 
     def generate_all_prior_trackers(self):
         # type: () -> Generator[DialogueStateTracker, None, None]
@@ -504,7 +507,7 @@ class DialogueStateTracker(object):
         if key in self.slots:
             self.slots[key].value = value
         else:
-            logger.error("Tried to set non existent slot '{}'. Make sure you "
+            logger.debug("Tried to set non existent slot '{}'. Make sure you "
                          "added all your slots to your domain file."
                          "".format(key))
 
@@ -548,3 +551,15 @@ class DialogueStateTracker(object):
         new_slots = [SlotSet(e["entity"], e["value"]) for e in entities if
                      e["entity"] in self.slots.keys()]
         return new_slots
+    
+    def decrease_steps(self):
+        self.allow_steps -= 1
+    
+    def increase_steps(self):
+        self.allow_steps += 1
+
+    def clear_steps(self):
+        self.allow_steps = 0
+    
+    def reset_steps(self):
+        self.allow_steps = 2
