@@ -103,13 +103,13 @@ $(document).ready(function () {
                                     "call_to_actions": [
                                         {
                                             "type": "postback",
-                                            "title": "Để lại lời nhắn",
-                                            "payload": "để lại lời nhắn"
+                                            "title": "Thông tin tuyển dụng",
+                                            "payload": "thông tin tuyển dụng"
                                         },
                                         {
                                             "type": "postback",
-                                            "title": "Thông tin tuyển dụng",
-                                            "payload": "thông tin tuyển dụng"
+                                            "title": "Ứng tuyển ngay",
+                                            "payload": "Ứng tuyển ngay"
                                         },
                                         {
                                             "type": "web_url",
