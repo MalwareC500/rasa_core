@@ -16,6 +16,7 @@ from rasa_core.events import (
     Event, SlotSet, Restarted, ActionReverted, UserUtteranceReverted,
     BotUttered, Form)
 from rasa_core.slots import Slot
+import time
 
 logger = logging.getLogger(__name__)
 
@@ -54,7 +55,9 @@ class DialogueStateTracker(object):
                   page_id: Text,
                   events_as_dict: List[Dict[Text, Any]],
                   slots: List[Slot],
-                  max_event_history: Optional[int] = None
+                  max_event_history: Optional[int] = None,
+                  paused: bool = None,
+                  paused_time: float = None
                   ) -> 'DialogueStateTracker':
         """Create a tracker from dump.
 
@@ -62,7 +65,8 @@ class DialogueStateTracker(object):
         the tracker, these events will be replayed to recreate the state."""
 
         evts = events.deserialise_events(events_as_dict)
-        return cls.from_events(sender_id, page_id, evts, slots, max_event_history)
+        print("pause:", paused)
+        return cls.from_events(sender_id, page_id, evts, slots, max_event_history, paused=paused, paused_time=paused_time)
 
     @classmethod
     def from_events(cls,
@@ -70,21 +74,27 @@ class DialogueStateTracker(object):
                     page_id: Text,
                     evts: List[Event],
                     slots: List[Slot],
-                    max_event_history: Optional[int] = None
+                    max_event_history: Optional[int] = None,
+                    paused: bool = None,
+                    paused_time: float = None
                     ):
-        tracker = cls(sender_id, page_id, slots, max_event_history)
+        print("cls", cls)
+        print(paused)
+        tracker = cls(sender_id, page_id, slots, max_event_history, paused=paused, paused_time=paused_time)
+        print(tracker.events)
+        print("pause?", tracker.is_paused())
         for e in evts:
             tracker.update(e)
+        print(tracker.events)
         return tracker
 
     def __init__(self, sender_id, page_id, slots,
-                 max_event_history=None, allow_steps=2):
+                 max_event_history=None, allow_steps=2, paused=False, paused_time=None):
         """Initialize the tracker.
 
         A set of events can be stored externally, and we will run through all
         of them to get the current state. The tracker will represent all the
         information we captured while processing messages of the dialogue."""
-
         # maximum number of events to store
         self._max_event_history = max_event_history
         # list of previously seen events
@@ -101,7 +111,7 @@ class DialogueStateTracker(object):
         # `reset()`
         ###
         # if tracker is paused, no actions should be taken
-        self._paused = False
+        self._paused = paused
         # A deterministically scheduled action to be executed next
         self.followup_action = ACTION_LISTEN_NAME
         self.latest_action_name = None
@@ -111,6 +121,7 @@ class DialogueStateTracker(object):
         self._reset()
         self.active_form = {}
         self.allow_steps = allow_steps
+        self.paused_time = paused_time
 
     ###
     # Public tracker interface
@@ -141,6 +152,7 @@ class DialogueStateTracker(object):
             "latest_event_time": latest_event_time,
             "followup_action": self.followup_action,
             "paused": self.is_paused(),
+            "paused_time": self.paused_time,
             "events": evts,
             "latest_input_channel": self.get_latest_input_channel(),
             "active_form": self.active_form,
@@ -218,6 +230,16 @@ class DialogueStateTracker(object):
         for e in reversed(self.events):
             if isinstance(e, UserUttered):
                 return e.input_channel
+
+    def pause(self):
+        self._paused = True
+        self.paused_time = time.time()
+
+    def resume(self):
+        self._paused = False
+        self.paused_time = None
+        self.events = self._create_events([])
+        self.update(ActionExecuted(ACTION_LISTEN_NAME))
 
     def is_paused(self) -> bool:
         """State whether the tracker is currently paused."""
@@ -409,7 +431,9 @@ class DialogueStateTracker(object):
         if not isinstance(event, Event):  # pragma: no cover
             raise ValueError("event to log must be an instance "
                              "of a subclass of Event.")
-
+        if event.type_name == "pause":
+            if self.is_paused():
+                return
         self.events.append(event)
         event.apply_to(self)
 
@@ -487,7 +511,7 @@ class DialogueStateTracker(object):
         """Reset tracker to initial state - doesn't delete events though!."""
 
         self._reset_slots()
-        self._paused = False
+        # self._paused = False
         self.latest_action_name = None
         self.latest_message = UserUttered.empty()
         self.latest_bot_utterance = BotUttered.empty()

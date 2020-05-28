@@ -236,13 +236,14 @@ class MongoTrackerStore(TrackerStore):
                 {"sender_id": int(sender_id), "page_id": int(page_id)},
                 {"$set": {"sender_id": str(sender_id), "page_id": str(page_id)}},
                 return_document=ReturnDocument.AFTER)
-
         if stored is not None:
             if self.domain:
                 return DialogueStateTracker.from_dict(sender_id,
                                                       page_id,
                                                       stored.get("events"),
-                                                      self.domain.slots)
+                                                      self.domain.slots,
+                                                      paused=stored.get("paused"),
+                                                      paused_time=stored.get("paused_time"))
             else:
                 logger.warning("Can't recreate tracker from mongo storage "
                                "because no domain is set. Returning `None` "
