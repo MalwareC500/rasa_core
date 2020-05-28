@@ -71,9 +71,10 @@ class MessageProcessor(object):
 
         # preprocess message if necessary
         tracker = self.log_message(message)
+        logger.warn(tracker.events)
         if not tracker:
             return None
-
+        
         self._predict_and_execute_next_action(message, tracker)
         # save tracker state to continue conversation from this state
         self._save_tracker(tracker)
@@ -115,6 +116,7 @@ class MessageProcessor(object):
         # we have a Tracker instance for each user
         # which maintains conversation state
         tracker = self._get_tracker(message.sender_id, message.page_id)
+        logger.warn(tracker.events)
         if tracker:
             self._handle_message_with_tracker(message, tracker)
             # save tracker state to continue conversation from this state
@@ -255,7 +257,6 @@ class MessageProcessor(object):
     def _handle_message_with_tracker(self,
                                      message: UserMessage,
                                      tracker: DialogueStateTracker) -> None:
-
         if message.parse_data:
             parse_data = message.parse_data
         else:
@@ -274,8 +275,16 @@ class MessageProcessor(object):
         logger.debug("Logged UserUtterance - "
                      "tracker now has {} events".format(len(tracker.events)))
 
-    @staticmethod
-    def _should_handle_message(tracker):
+    def _should_handle_message(self, tracker, message=None):
+        current_time = time.time()
+        logger.warn(tracker.paused_time)
+        if tracker.is_paused():
+            if current_time - tracker.paused_time > 10:
+                print("-----------------wtf----------")
+                tracker.resume()
+                if message is not None:
+                    self._handle_message_with_tracker(message, tracker)
+
         return (not tracker.is_paused() or
                 tracker.latest_message.intent.get("name") ==
                 USER_INTENT_RESTART)
@@ -295,10 +304,11 @@ class MessageProcessor(object):
 
         # action loop. predicts actions until we hit action listen
         while (should_predict_another_action and
-               self._should_handle_message(tracker) and
+               self._should_handle_message(tracker, message) and
                num_predicted_actions < self.max_number_of_predictions):
             # this actually just calls the policy's method by the same name
             action, policy, confidence = self.predict_next_action(tracker)
+            print(action, policy, confidence)
             should_predict_another_action = self._run_action(action,
                                                              tracker,
                                                              dispatcher,
@@ -458,8 +468,9 @@ class MessageProcessor(object):
                                                   Optional[Text]]:
         """Collect predictions from ensemble and return action and predictions.
         """
-
         followup_action = tracker.followup_action
+        # print(tracker.followup_action)
+        print(len(tracker.events))
         if followup_action:
             tracker.clear_followup_action()
             result = self._prob_array_for_action(followup_action)

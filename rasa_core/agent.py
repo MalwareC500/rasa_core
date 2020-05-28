@@ -317,8 +317,9 @@ class Agent(object):
 
         if not self.is_ready():
             return noop(message)  #
-            
+        
         processor = self.create_processor(message_preprocessor)
+        print("xxx")
         return processor.handle_message(message)
 
     # noinspection PyUnusedLocal

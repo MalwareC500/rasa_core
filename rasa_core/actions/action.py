@@ -327,6 +327,20 @@ class RemoteAction(Action):
             draft.update(response)
             dispatcher.utter_response(draft)
 
+    @staticmethod
+    def _update_tracker(events_json: List[Dict[Text, Any]],
+                        tracker: 'DialogueStateTracker'
+                        ) -> None:
+        """Do something with tracker here. Have to explain later
+        """
+        event = events_json[0]
+        event_name = event['event']
+        if event_name == 'slot':
+            slot_name = event_name['name']
+            if slot_name == tracker.get_slot('requested_slot'):
+                tracker.decrease_steps()
+                print("steps: ", tracker.allow_steps)
+
     def run(self, dispatcher, tracker, domain):
         json = self._action_call_format(tracker, domain)
 
@@ -378,7 +392,7 @@ class RemoteAction(Action):
         events_json = response_data.get("events", [])
         responses = response_data.get("responses", [])
         self._utter_responses(responses, dispatcher, tracker)
-
+        logger.info(events_json)
         evts = events.deserialise_events(events_json)
 
         return evts

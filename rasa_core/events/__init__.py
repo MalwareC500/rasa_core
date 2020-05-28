@@ -685,7 +685,9 @@ class ConversationPaused(Event):
         return self.type_name
 
     def apply_to(self, tracker):
-        tracker._paused = True
+        print(tracker.is_paused())
+        if not tracker.is_paused():
+            tracker.pause()
 
 
 # noinspection PyProtectedMember
@@ -710,7 +712,7 @@ class ConversationResumed(Event):
         return self.type_name
 
     def apply_to(self, tracker):
-        tracker._paused = False
+        tracker.resume()
 
 
 # noinspection PyProtectedMember
