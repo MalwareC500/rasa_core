@@ -280,7 +280,6 @@ class MessageProcessor(object):
         logger.warn(tracker.paused_time)
         if tracker.is_paused():
             if current_time - tracker.paused_time > 10:
-                print("-----------------wtf----------")
                 tracker.resume()
                 if message is not None:
                     self._handle_message_with_tracker(message, tracker)
@@ -308,7 +307,7 @@ class MessageProcessor(object):
                num_predicted_actions < self.max_number_of_predictions):
             # this actually just calls the policy's method by the same name
             action, policy, confidence = self.predict_next_action(tracker)
-            print(action, policy, confidence)
+            logger.debug(action, policy, confidence)
             should_predict_another_action = self._run_action(action,
                                                              tracker,
                                                              dispatcher,
@@ -470,7 +469,7 @@ class MessageProcessor(object):
         """
         followup_action = tracker.followup_action
         # print(tracker.followup_action)
-        print(len(tracker.events))
+        # print(len(tracker.events))
         if followup_action:
             tracker.clear_followup_action()
             result = self._prob_array_for_action(followup_action)

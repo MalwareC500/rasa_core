@@ -319,7 +319,6 @@ class Agent(object):
             return noop(message)  #
         
         processor = self.create_processor(message_preprocessor)
-        print("xxx")
         return processor.handle_message(message)
 
     # noinspection PyUnusedLocal
