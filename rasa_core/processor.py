@@ -71,7 +71,7 @@ class MessageProcessor(object):
 
         # preprocess message if necessary
         tracker = self.log_message(message)
-        logger.warn(tracker.events)
+        # logger.warn(tracker.events)
         if not tracker:
             return None
         
@@ -116,7 +116,7 @@ class MessageProcessor(object):
         # we have a Tracker instance for each user
         # which maintains conversation state
         tracker = self._get_tracker(message.sender_id, message.page_id)
-        logger.warn(tracker.events)
+        # logger.warn(tracker.events)
         if tracker:
             self._handle_message_with_tracker(message, tracker)
             # save tracker state to continue conversation from this state
