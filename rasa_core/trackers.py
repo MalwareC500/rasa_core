@@ -65,7 +65,7 @@ class DialogueStateTracker(object):
         the tracker, these events will be replayed to recreate the state."""
 
         evts = events.deserialise_events(events_as_dict)
-        print("pause:", paused)
+        # print("pause:", paused)
         return cls.from_events(sender_id, page_id, evts, slots, max_event_history, paused=paused, paused_time=paused_time)
 
     @classmethod
@@ -78,14 +78,14 @@ class DialogueStateTracker(object):
                     paused: bool = None,
                     paused_time: float = None
                     ):
-        print("cls", cls)
-        print(paused)
+        # print("cls", cls)
+        # print(paused)
         tracker = cls(sender_id, page_id, slots, max_event_history, paused=paused, paused_time=paused_time)
-        print(tracker.events)
-        print("pause?", tracker.is_paused())
+        # print(tracker.events)
+        # print("pause?", tracker.is_paused())
         for e in evts:
             tracker.update(e)
-        print(tracker.events)
+        # print(tracker.events)
         return tracker
 
     def __init__(self, sender_id, page_id, slots,

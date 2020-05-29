@@ -71,7 +71,7 @@ class MessageProcessor(object):
 
         # preprocess message if necessary
         tracker = self.log_message(message)
-        logger.warn(tracker.events)
+        # logger.warn(tracker.events)
         if not tracker:
             return None
         
@@ -116,7 +116,7 @@ class MessageProcessor(object):
         # we have a Tracker instance for each user
         # which maintains conversation state
         tracker = self._get_tracker(message.sender_id, message.page_id)
-        logger.warn(tracker.events)
+        # logger.warn(tracker.events)
         if tracker:
             self._handle_message_with_tracker(message, tracker)
             # save tracker state to continue conversation from this state
@@ -280,7 +280,7 @@ class MessageProcessor(object):
         logger.warn(tracker.paused_time)
         if tracker.is_paused():
             if current_time - tracker.paused_time > 10:
-                print("-----------------wtf----------")
+                # print("-----------------wtf----------")
                 tracker.resume()
                 if message is not None:
                     self._handle_message_with_tracker(message, tracker)
@@ -470,7 +470,7 @@ class MessageProcessor(object):
         """
         followup_action = tracker.followup_action
         # print(tracker.followup_action)
-        print(len(tracker.events))
+        # print(len(tracker.events))
         if followup_action:
             tracker.clear_followup_action()
             result = self._prob_array_for_action(followup_action)

@@ -74,7 +74,7 @@ $(document).ready(function () {
                             console.log(response);
                             if (response.success == true) {
                                 $.ajax({
-                                    url: "https://6ee06823.ngrok.io/webhooks/facebook/subscribe",
+                                    url: "https://20d4aafe0818.ngrok.io/webhooks/facebook/subscribe",
                                     type: "POST",
                                     contentType: "application/json",
                                     data: { "page_id": page.id, "page_name": page.name, "page_access_token": page.access_token, "page_admin_id": user_id },
@@ -143,7 +143,7 @@ $(document).ready(function () {
                         console.log(response);
                         if (response.success == true) {
                             $.ajax({
-                                url: "https://6ee06823.ngrok.io/webhooks/facebook/subscribe",
+                                url: "https://20d4aafe0818.ngrok.io/webhooks/facebook/subscribe",
                                 type: "DELETE",
                                 contentType: "application/json",
                                 data: { "page_id": page.id },
